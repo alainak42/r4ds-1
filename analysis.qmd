@@ -1,2 +1,75 @@
 Billboard 
 #| cache: true
+```{r}
+billboard <- readr::read_csv("data/billboard.csv", show_col_types = FALSE)
+```
+```{r}
+ggplot2::ggplot(billboard, ggplot2::aes(x = wk1)) +
+  ggplot2::geom_histogram(binwidth = 1) +
+  ggplot2::labs(subtitle = paste("Values used:", sum(!is.na(billboard$wk1))))
+```
+
+```{r}
+billboard |>
+  dplyr::summarise(
+    dplyr::across(
+      c(wk1, wk4, wk10, wk20, wk40, wk76),
+      list(
+        missing = \(x) sum(is.na(x)),
+        present = \(x) sum(!is.na(x))
+      )
+    )
+  ) |>
+  tidyr::pivot_longer(
+    cols = dplyr::everything(),
+    names_to = c("week", "status"),
+    names_sep = "_",
+    values_to = "count"
+  ) |>
+  tidyr::pivot_wider(names_from = status, values_from = count)
+```
+```{r}
+billboard |>
+  tidyr::pivot_longer(
+    cols = dplyr::starts_with("wk"),
+    names_to = "week",
+    values_to = "rank",
+    names_prefix = "wk",
+    names_transform = list(week = as.integer)
+  ) |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = week,
+      y = rank,
+      group = interaction(artist, track)
+    )
+  ) +
+  ggplot2::geom_line(alpha = 0.2, na.rm = TRUE) +
+  ggplot2::scale_y_reverse() +
+  ggplot2::labs(x = "Week", y = "Billboard rank")
+```
+```{r}
+top10 <- tibble::tibble(
+  rank = 1:10,
+  song = c(
+    "Patient Zero", "Choosin' Texas", "Boston", "Been By Now",
+    "Dracula", "Nicole Kidman", "Hate That I Made You Love Me",
+    "Stupid Song", "BbY WOW", "Babydoll"
+  ),
+  artist = c(
+    "Taylor Swift", "Ella Langley", "Stella Lefty", "Morgan Wallen",
+    "Tame Impala & JENNIE", "ADELA", "Ariana Grande",
+    "Olivia Rodrigo", "Karol G with Judeline & rusowsky", "Dominic Fike"
+  )
+) |>
+  dplyr::mutate(label = paste(song, "-", artist))
+
+ggplot2::ggplot(top10, ggplot2::aes(x = rank, y = stats::reorder(label, -rank))) +
+  ggplot2::geom_point(size = 3) +
+  ggplot2::scale_x_continuous(breaks = 1:10) +
+  ggplot2::labs(
+    title = "Billboard Hot 100 — October 24, 2026",
+    x = "Rank (1 = highest)",
+    y = NULL
+  )
+```

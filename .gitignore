@@ -1,3 +1,28 @@
 analysis_files
 
 billboard.csv
+
+analysis_cache
+billboard: artist, track, date entered, and the first four week columns
+```{r}
+billboard |>
+  dplyr::summarize(
+    first_date = min(date.entered),
+    last_date = max(date.entered)
+  )
+```
+
+```{r}
+n_values <- sum(!is.na(billboard$wk1))
+
+billboard |>
+  dplyr::filter(!is.na(wk1)) |>
+  ggplot2::ggplot(ggplot2::aes(x = wk1)) +
+  ggplot2::geom_histogram(binwidth = 1) +
+  ggplot2::labs(
+    x = "Week 1 ranking",
+    y = "Number of songs",
+    subtitle = paste("Values used:", n_values)
+  )
+```
+summary(billboard$date.entered)
